@@ -10,6 +10,7 @@ my_logger.setLevel(logging.DEBUG)
 
 
 def greetings(user_time: str) -> str:
+    """Функция, которая возвращает приветствие в зависимости от времени суток"""
     try:
         my_logger.info("Приводим строку с датой к нужному формату")
         date_obj = datetime.strptime(user_time, "%H:%M:%S")
@@ -34,5 +35,28 @@ def greetings(user_time: str) -> str:
         print(e.__class__.__name__)
 
 
-def monthly_interval(transactions, user_date):
-    pass
+def monthly_interval(transactions: list[dict]) -> list[dict]:
+    """Функция, которая возвращает список словарей с информацией о карте:
+    последние 4 цифры карты, общая сумма расходов и кэшбек"""
+    result = []
+    for trans in transactions:
+        card_number = trans.get("Номер карты")
+        card_status = trans.get("Статус")
+        card_amount = trans.get("Сумма операции")
+        if not card_status == "OK":
+            continue
+        if card_amount >= 0:
+            continue
+        if not card_number:
+            continue
+    for trans in transactions:
+        for card_number, card_amount in trans:
+            card = card_number[-4:]
+            spent = round(abs(card_amount), 2)
+            cashback = round(spent * 0.01, 2)
+            result.append({
+                "last_digits": card,
+                "total_spent": spent,
+                "cashback": cashback
+            })
+    return result
