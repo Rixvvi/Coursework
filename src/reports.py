@@ -14,6 +14,7 @@ my_logger.setLevel(logging.DEBUG)
 
 @log('result.txt')
 def spending_by_category(transactions: pd.DataFrame, category: str, date: Optional[str] = None) -> pd.DataFrame:
+    """Функция, которая возвращает траты по заданной категории за последние три месяца от переданной даты"""
     try:
         my_logger.info('Проверяем, указана ли дата')
         if not date:

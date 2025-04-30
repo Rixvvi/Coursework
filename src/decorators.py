@@ -3,6 +3,7 @@ import pandas as pd
 
 
 def log(file_name):
+    """Декоратор для функций-отчетов, который записывает в файл результат, возвращаемый функцией, формирующей отчет"""
     def my_decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):

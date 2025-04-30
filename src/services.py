@@ -35,6 +35,8 @@ def get_search_str(transactions: list[dict], string_search: str) -> list[dict]:
 
 
 def get_search_numbers(transactions: list[dict]) -> list[dict]:
+    """Функция, которая принимает список словарей с транзакциями и возвращает JSON-ответ с транзакциями,
+        в описании которых находится номер телефона"""
     result = []
     pattern = re.compile(r"\+\d+ \d+ \d+-\d+-\d+$")
     my_logger.info("Начинаем поиск транзакций по описаниям, в которых есть номера телефонов")
