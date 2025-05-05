@@ -22,16 +22,23 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         else:
             stop_date = datetime.strptime(date, "%d.%m.%Y")
         start_date = stop_date - pd.Timedelta(days=90)
+
         columns = ['Дата платежа', 'Сумма операции', 'Категория']
         my_logger.info('Проверяем наличие необходимых нам колонок')
         for i in columns:
             if i not in transactions.columns:
-                return pd.DataFrame()
+                continue
         transactions["Дата платежа"] = pd.to_datetime(transactions["Дата платежа"], format="%d.%m.%Y")
         a = (transactions["Дата платежа"] >= start_date) & (transactions["Дата платежа"] <= stop_date)
         b = transactions["Категория"] == category
         c = transactions["Сумма операции"] < 0
         filtered_transactions = transactions[a & b & c]
+        if len(filtered_transactions) == 0:
+            result = pd.DataFrame({
+                "Категория": [category],
+                "Сумма трат": ["Не найдено"]
+            })
+            return result
         spending = filtered_transactions["Сумма операции"].abs()
         result = pd.DataFrame({
             "Категория": [category] * len(spending),
@@ -41,4 +48,4 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
         return result
     except Exception as e:
         my_logger.error('Произошла ошибка')
-        print(print(e.__class__.__name__))
+        print(e.__class__.__name__)
