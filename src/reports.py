@@ -1,7 +1,9 @@
-from datetime import datetime
 import logging
-import pandas as pd
+from datetime import datetime
 from typing import Optional
+
+import pandas as pd
+
 from src.decorators import log
 
 my_logger = logging.getLogger(__name__)
@@ -38,6 +40,7 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
                 "Категория": [category],
                 "Сумма трат": ["Не найдено"]
             })
+            my_logger.info("Подходящих операций не найдено")
             return result
         spending = filtered_transactions["Сумма операции"].abs()
         result = pd.DataFrame({

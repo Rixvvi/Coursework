@@ -1,12 +1,14 @@
 from functools import wraps
+from typing import Any, Callable, Optional
+
 import pandas as pd
 
 
-def log(file_name):
+def log(file_name: Optional[str] = None) -> Any:
     """Декоратор для функций-отчетов, который записывает в файл результат, возвращаемый функцией, формирующей отчет"""
-    def my_decorator(func):
+    def my_decorator(func: Callable[..., Any]) -> Any:
         @wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: tuple, **kwargs: dict) -> Any:
             result = func(*args, **kwargs)
             if isinstance(result, pd.DataFrame):
                 result.to_csv(file_name, encoding='utf-8')

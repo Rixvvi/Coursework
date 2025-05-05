@@ -1,14 +1,166 @@
-import pandas as pd
 import json
+import logging
+import os
+from datetime import datetime, time, timedelta
 
-my_transactions = [
-    {'Дата операции': '17.03.2019 15:05:27', 'Дата платежа': '19.07.2019', 'Номер карты': '*7197', 'Статус': 'OK', 'Сумма операции': -25.0, 'Валюта операции': 'RUB', 'Сумма платежа': -25.0, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Дом и ремонт', 'MCC': 5200.0, 'Описание': 'OOO Nadezhda', 'Бонусы (включая кэшбэк)': 0, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 25.0},
-    {'Дата операции': '17.07.2019 15:01:15', 'Дата платежа': '19.07.2019', 'Номер карты': '*7197', 'Статус': 'OK', 'Сумма операции': -27.0, 'Валюта операции': 'RUB', 'Сумма платежа': -27.0, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Дом и ремонт', 'MCC': 5200.0, 'Описание': 'OOO Nadezhda', 'Бонусы (включая кэшбэк)': 0, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 27.0},
-    {'Дата операции': '10.11.2000 16:30:10', 'Дата платежа': '18.07.2019', 'Номер карты': '*7197', 'Статус': 'OK', 'Сумма операции': -49.8, 'Валюта операции': 'RUB', 'Сумма платежа': -49.8, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Супермаркеты', 'MCC': 5411.0, 'Описание': 'SPAR', 'Бонусы (включая кэшбэк)': 0, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 49.8},
-    {'Дата операции': '16.07.2020 16:13:54', 'Дата платежа': '17.07.2019', 'Номер карты': '*7197', 'Статус': 'OK', 'Сумма операции': -114.0, 'Валюта операции': 'RUB', 'Сумма платежа': -114.0, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Фастфуд', 'MCC': 5814.0, 'Описание': 'IP Yakubovskaya M. V.', 'Бонусы (включая кэшбэк)': 2, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 114.0},
-    {'Дата операции': '12.07.2019 13:27:53', 'Дата платежа': '17.07.2019', 'Номер карты': '*7197', 'Статус': 'OK', 'Сумма операции': -148.0, 'Валюта операции': 'RUB', 'Сумма платежа': -148.0, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Транспорт', 'MCC': 4121.0, 'Описание': 'Яндекс Такси', 'Бонусы (включая кэшбэк)': 2, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 148.0},
-    {'Дата операции': '16.07.2019 00:00:00', 'Дата платежа': '16.07.2019', 'Номер карты': '', 'Статус': 'OK', 'Сумма операции': 189.0, 'Валюта операции': 'RUB', 'Сумма платежа': 189.0, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Бонусы', 'MCC': '', 'Описание': 'Вознаграждение за операции покупок', 'Бонусы (включая кэшбэк)': 0, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 189.0},
-    {'Дата операции': '01.07.2019 00:00:00', 'Дата платежа': '16.07.2019', 'Номер карты': '', 'Статус': 'OK', 'Сумма операции': 258.3, 'Валюта операции': 'RUB', 'Сумма платежа': 258.3, 'Валюта платежа': 'RUB', 'Кэшбэк': '', 'Категория': 'Бонусы', 'MCC': '', 'Описание': 'Проценты на остаток по счету', 'Бонусы (включая кэшбэк)': 0, 'Округление на инвесткопилку': 0, 'Сумма операции с округлением': 258.3}]
+import pandas as pd
+import requests
+from dotenv import load_dotenv
+
+load_dotenv()
+
+my_logger = logging.getLogger(__name__)
+file_handler = logging.FileHandler('../logs/views_logs.log', 'w')
+file_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
+file_handler.setFormatter(file_formatter)
+my_logger.addHandler(file_handler)
+my_logger.setLevel(logging.DEBUG)
+
+
+def monthly_interval(transactions: list[dict], user_time: str) -> list[dict]:
+    """Функция, которая определяет временной промежуток от введенной пользователем даты до начала месяца"""
+    result = []
+    day_number = int(user_time[:2])
+    stop_date = datetime.strptime(user_time, "%d.%m.%Y").date()
+    start_date = stop_date - timedelta(days=(day_number - 1))
+    for transaction in transactions:
+        transaction_date = datetime.strptime(transaction["Дата операции"], "%d.%m.%Y %H:%M:%S").date()
+        if start_date <= transaction_date <= stop_date:
+            result.append(transaction)
+        else:
+            continue
+    return result
+
+
+def greetings() -> str:
+    """Функция, которая возвращает приветствие в зависимости от времени суток"""
+    try:
+        my_logger.info("Приводим строку с датой к нужному формату")
+        user_time = datetime.now().time()
+        greets = ["Доброе утро", "Добрый день", "Добрый вечер", "Доброй ночи"]
+        morning_time = time(6, 0)
+        day_time = time(12, 0)
+        evening_time = time(18, 0)
+        night_time = time(22, 0)
+        my_logger.info("Выбираем приветствие по времени суток")
+        if morning_time <= user_time < day_time:
+            greet = greets[0]
+        elif day_time <= user_time < evening_time:
+            greet = greets[1]
+        elif evening_time <= user_time < night_time:
+            greet = greets[2]
+        else:
+            greet = greets[3]
+        my_logger.info("Приветствие успешно выбрано")
+        return greet
+    except Exception as e:
+        my_logger.error("Возникла ошибка")
+        print(e.__class__.__name__)
+
+
+def card_information(transactions: list[dict]) -> list[dict]:
+    """Функция, которая возвращает список словарей с информацией о карте:
+    последние 4 цифры карты, общая сумма расходов и кэшбек"""
+    result = []
+    sorted_operations = []
+    my_logger.info("Проверяем транзакции на то, подходят они нам или нет")
+    for trans in transactions:
+        card_number = trans.get("Номер карты")
+        card_status = trans.get("Статус")
+        card_amount = trans.get("Сумма операции")
+        if not card_status == "OK":
+            continue
+        if card_amount >= 0:
+            continue
+        if not card_number:
+            continue
+        my_logger.info("Операция успешно добавлена")
+        sorted_operations.append(trans)
+    my_logger.info("Находим 4 цифры карты, сумму расходов и вычисляем кэшбек")
+    for operation in sorted_operations:
+        number = operation.get("Номер карты")
+        amount = operation.get("Сумма операции")
+        card = str(number)[-4:]
+        spent = round(abs(amount), 2)
+        cashback = round(spent * 0.01, 2)
+        result.append({
+            "last_digits": card,
+            "total_spent": spent,
+            "cashback": cashback
+        })
+    return result
+
+
+def top_transactions(transactions: list[dict]) -> list[dict]:
+    """Функция, которая возвращает топ-5 транзакций по сумме платежа"""
+    result = []
+    top = sorted(transactions, key=lambda x: abs(x['Сумма операции']), reverse=True)[:5]
+    for i in top:
+        date = i.get("Дата операции")
+        date_obj = datetime.strptime(date, "%d.%m.%Y %H:%M:%S")
+        date_string = date_obj.strftime("%d.%m.%Y")
+        amount = i.get("Сумма операции")
+        category = i.get("Категория")
+        description = i.get("Описание")
+        result.append({
+            "date": date_string,
+            "amount": amount,
+            "category": category,
+            "description": description
+        })
+    return result
+
+
+def exchange_rate(currency: list) -> list[dict]:
+    """Функция, которая высчитывает курс валют"""
+    params = ",".join(currency)
+    try:
+        url = "https://api.currencyapi.com/v3/latest"
+        headers = {"apikey": os.getenv("API_KEY")}
+        params = {
+            "base_currency": "RUB",
+            "currencies": params
+        }
+        response = requests.get(url, params=params, headers=headers, data={})
+        result = response.json()
+        if 'data' not in result:
+            print("Ошибка в ответе от API")
+        conversion = []
+        for currency_code, data in result['data'].items():
+            if currency_code in currency:
+                conversion.append({
+                    "currency": currency_code,
+                    "rate": round(1 / data['value'], 2)
+                })
+        return conversion
+    except Exception as e:
+        print(e.__class__.__name__)
+    return []
+
+
+def share_price(stock: list) -> list[dict]:
+    """Функция, которая высчитывает стоимость акций из S&P500"""
+    symbol = stock
+    finding = []
+    try:
+        for i in symbol:
+            url = "https://www.alphavantage.co/query"
+            params = {
+                "function": "GLOBAL_QUOTE",
+                "symbol": i,
+                "apikey": os.getenv("API")
+            }
+            response = requests.get(url, params=params, data={})
+            result = response.json()
+            price = float(result["Global Quote"]["05. price"])
+            finding.append({
+                "stock": i,
+                "price": price
+            })
+        return finding
+    except Exception as e:
+        print(e.__class__.__name__)
+    return []
 
 
 def read_from_excel(path: str) -> list[dict]:
@@ -30,6 +182,7 @@ def read_from_json(path: str) -> dict:
             return data
     except Exception as e:
         print(e.__class__.__name__)
+    return {}
 
 
 def get_currencies(required_currency: dict) -> list:

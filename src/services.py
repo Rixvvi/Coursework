@@ -1,6 +1,6 @@
-import re
 import json
 import logging
+import re
 
 my_logger = logging.getLogger(__name__)
 file_handler = logging.FileHandler('../logs/services_logs.log', 'w')
