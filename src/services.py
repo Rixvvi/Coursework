@@ -26,7 +26,7 @@ def get_search_str(transactions: list[dict], string_search: str) -> list[dict]:
         my_logger.error("Возникла ошибка")
         print(e.__class__.__name__)
     try:
-        with open("search.json", "w", encoding="utf-8") as file:
+        with open("dtyd.json", "w", encoding="utf-8") as file:
             json.dump(result, file)
     except Exception as e:
         my_logger.error("Возникла ошибка при попытке записи в файл")
@@ -49,7 +49,7 @@ def get_search_numbers(transactions: list[dict]) -> list[dict]:
         my_logger.error("Возникла ошибка")
         print(e.__class__.__name__)
     try:
-        with open("number.json", "w", encoding="utf-8") as file:
+        with open("dp.json", "w", encoding="utf-8") as file:
             json.dump(result, file)
     except Exception as e:
         my_logger.error("Возникла ошибка при попытке записи в файл")
