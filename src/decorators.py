@@ -10,7 +10,7 @@ def log(file_name: Optional[str] = None) -> Any:
         @wraps(func)
         def wrapper(*args: tuple, **kwargs: dict) -> Any:
             result = func(*args, **kwargs)
-            if file_name:
+            if file_name and result is not None:
                 if isinstance(result, pd.DataFrame):
                     result.to_csv(file_name, encoding='utf-8')
                 else:

@@ -2,7 +2,6 @@ import json
 import logging
 import os
 from datetime import datetime, time, timedelta
-from typing import Any
 
 import pandas as pd
 import requests
@@ -60,6 +59,7 @@ def greetings() -> str:
         my_logger.error("Возникла ошибка")
         print(e.__class__.__name__)
     return 'Доброго времени суток'
+
 
 def card_information(transactions: list[dict]) -> list[dict]:
     """Функция, которая возвращает список словарей с информацией о карте:
