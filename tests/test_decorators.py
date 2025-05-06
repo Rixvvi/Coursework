@@ -10,7 +10,7 @@ def test_generate():
     return pd.DataFrame([{"name": "Alice", "age": 30}])
 
 
-def test_log():
+def test_log() -> None:
     result = test_generate()
     assert isinstance(result, pd.DataFrame)
     assert os.path.exists("test_output.csv")

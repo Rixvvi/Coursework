@@ -45,7 +45,7 @@ oper = []
         )
     ]
 )
-def test_get_search_numbers(accepted, expected):
+def test_get_search_numbers(accepted, expected) -> None:
     result = get_search_numbers(accepted)
     assert result == expected
 
@@ -93,6 +93,6 @@ operat = [
         )
     ]
 )
-def test_get_search_str(accepted, string, expected):
+def test_get_search_str(accepted, string, expected) -> None:
     result = get_search_str(accepted, string)
     assert result == expected

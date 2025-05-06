@@ -51,6 +51,6 @@ from src.reports import spending_by_category
         ),
     ]
 )
-def test_spending_by_category(df, category, date, expected):
+def test_spending_by_category(df, category, date, expected) -> None:
     result = spending_by_category(df, category, date)
     pd.testing.assert_frame_equal(result, expected)
