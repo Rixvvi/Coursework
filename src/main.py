@@ -1,8 +1,8 @@
 import pandas as pd
 
+from src.reader import read_from_excel
 from src.reports import spending_by_category
 from src.services import get_search_numbers, get_search_str
-from src.utils import read_from_excel
 from src.views import function
 
 
