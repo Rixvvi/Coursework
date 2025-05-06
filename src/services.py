@@ -2,6 +2,8 @@ import json
 import logging
 import re
 
+import pandas as pd
+
 my_logger = logging.getLogger(__name__)
 file_handler = logging.FileHandler('../logs/services_logs.log', 'w')
 file_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
@@ -17,9 +19,15 @@ def get_search_str(transactions: list[dict], string_search: str) -> list[dict]:
     try:
         my_logger.info("Начинаем поиск транзакций по строке, введенной пользователем")
         for i in transactions:
-            category = re.search(rf"{string_search}", i.get("Категория", ""), flags=re.IGNORECASE)
-            description = re.search(rf"{string_search}", i.get("Описание", ""), flags=re.IGNORECASE)
-            if category or description:
+            category = i.get("Категория", "")
+            description = i.get("Описание", "")
+            if pd.isna(category):
+                category = ""
+            if pd.isna(description):
+                description = ""
+            category_match = re.search(rf"{string_search}", category, flags=re.IGNORECASE)
+            description_match = re.search(rf"{string_search}", description, flags=re.IGNORECASE)
+            if category_match or description_match:
                 result.append(i)
         my_logger.info("Поиск транзакций успешно завершен")
     except Exception as e:
@@ -27,7 +35,7 @@ def get_search_str(transactions: list[dict], string_search: str) -> list[dict]:
         print(e.__class__.__name__)
     try:
         with open("dtyd.json", "w", encoding="utf-8") as file:
-            json.dump(result, file)
+            json.dump(result, file, ensure_ascii=False, indent=4)
     except Exception as e:
         my_logger.error("Возникла ошибка при попытке записи в файл")
         print(e.__class__.__name__)

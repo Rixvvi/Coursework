@@ -52,3 +52,4 @@ def spending_by_category(transactions: pd.DataFrame, category: str, date: Option
     except Exception as e:
         my_logger.error('Произошла ошибка')
         print(e.__class__.__name__)
+    return pd.DataFrame()

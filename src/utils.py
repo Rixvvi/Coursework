@@ -2,6 +2,7 @@ import json
 import logging
 import os
 from datetime import datetime, time, timedelta
+from typing import Any
 
 import pandas as pd
 import requests
@@ -10,7 +11,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 my_logger = logging.getLogger(__name__)
-file_handler = logging.FileHandler('../logs/views_logs.log', 'w')
+file_handler = logging.FileHandler('../logs/utils_logs.log', 'w')
 file_formatter = logging.Formatter('%(asctime)s %(name)s %(levelname)s %(message)s')
 file_handler.setFormatter(file_formatter)
 my_logger.addHandler(file_handler)
@@ -23,12 +24,14 @@ def monthly_interval(transactions: list[dict], user_time: str) -> list[dict]:
     day_number = int(user_time[:2])
     stop_date = datetime.strptime(user_time, "%d.%m.%Y").date()
     start_date = stop_date - timedelta(days=(day_number - 1))
+    my_logger.info("Проходимся по транзакциям и проверяем, подходит ли дата под диапазон")
     for transaction in transactions:
         transaction_date = datetime.strptime(transaction["Дата операции"], "%d.%m.%Y %H:%M:%S").date()
         if start_date <= transaction_date <= stop_date:
             result.append(transaction)
         else:
             continue
+    my_logger.info("Функция отработала успешно")
     return result
 
 
@@ -56,7 +59,7 @@ def greetings() -> str:
     except Exception as e:
         my_logger.error("Возникла ошибка")
         print(e.__class__.__name__)
-
+    return 'Доброго времени суток'
 
 def card_information(transactions: list[dict]) -> list[dict]:
     """Функция, которая возвращает список словарей с информацией о карте:
@@ -88,12 +91,14 @@ def card_information(transactions: list[dict]) -> list[dict]:
             "total_spent": spent,
             "cashback": cashback
         })
+        my_logger.info("Функция отработала успешно")
     return result
 
 
 def top_transactions(transactions: list[dict]) -> list[dict]:
     """Функция, которая возвращает топ-5 транзакций по сумме платежа"""
     result = []
+    my_logger.info("Взяты 5 наибольших отсортированных транзакций по абсолютной сумме")
     top = sorted(transactions, key=lambda x: abs(x['Сумма операции']), reverse=True)[:5]
     for i in top:
         date = i.get("Дата операции")
@@ -108,6 +113,7 @@ def top_transactions(transactions: list[dict]) -> list[dict]:
             "category": category,
             "description": description
         })
+    my_logger.info("Функция отработала успешно")
     return result
 
 
@@ -121,6 +127,7 @@ def exchange_rate(currency: list) -> list[dict]:
             "base_currency": "RUB",
             "currencies": params
         }
+        my_logger.info("Запрос к api отправлен")
         response = requests.get(url, params=params, headers=headers, data={})
         result = response.json()
         if 'data' not in result:
@@ -128,12 +135,15 @@ def exchange_rate(currency: list) -> list[dict]:
         conversion = []
         for currency_code, data in result['data'].items():
             if currency_code in currency:
+                my_logger.info("Запрос обработан и отформатирован")
                 conversion.append({
                     "currency": currency_code,
                     "rate": round(1 / data['value'], 2)
                 })
+        my_logger.info("Ответы от api успешно получены и записаны")
         return conversion
     except Exception as e:
+        my_logger.error("Произошла ошибка")
         print(e.__class__.__name__)
     return []
 
@@ -142,25 +152,31 @@ def share_price(stock: list) -> list[dict]:
     """Функция, которая высчитывает стоимость акций из S&P500"""
     symbol = stock
     finding = []
-    try:
-        for i in symbol:
-            url = "https://www.alphavantage.co/query"
-            params = {
-                "function": "GLOBAL_QUOTE",
-                "symbol": i,
-                "apikey": os.getenv("API")
-            }
+    for i in symbol:
+        url = "https://www.alphavantage.co/query"
+        params = {
+            "function": "GLOBAL_QUOTE",
+            "symbol": i,
+            "apikey": os.getenv("API")
+        }
+        try:
+            my_logger.info("Запрос к api отправлен")
             response = requests.get(url, params=params, data={})
             result = response.json()
-            price = float(result["Global Quote"]["05. price"])
-            finding.append({
-                "stock": i,
-                "price": price
-            })
-        return finding
-    except Exception as e:
-        print(e.__class__.__name__)
-    return []
+            if "Global Quote" in result and "05. price" in result["Global Quote"]:
+                price = float(result["Global Quote"]["05. price"])
+                my_logger.info("Запрос обработан и отформатирован")
+                finding.append({
+                    "stock": i,
+                    "price": price
+                })
+            else:
+                my_logger.info("Цена не найдена")
+            my_logger.info("Ответы от api успешно получены и записаны")
+        except Exception as e:
+            my_logger.error("Произошла ошибка")
+            print(e.__class__.__name__)
+    return finding
 
 
 def read_from_excel(path: str) -> list[dict]:
@@ -168,8 +184,10 @@ def read_from_excel(path: str) -> list[dict]:
     try:
         df = pd.read_excel(path)
         data = df.to_dict(orient="records")
+        my_logger.info("Все прошло успешно, данные из файла записаны в переменную")
         return data
     except Exception as e:
+        my_logger.error("Произошла ошибка")
         print(e.__class__.__name__)
     return []
 
@@ -179,8 +197,10 @@ def read_from_json(path: str) -> dict:
     try:
         with open(path, "r", encoding="utf-8") as file:
             data = json.load(file)
+            my_logger.info("Все прошло успешно, данные из файла записаны в переменную")
             return data
     except Exception as e:
+        my_logger.error("Произошла ошибка")
         print(e.__class__.__name__)
     return {}
 
