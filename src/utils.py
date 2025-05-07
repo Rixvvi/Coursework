@@ -163,6 +163,7 @@ def share_price(stock: list) -> list[dict]:
             my_logger.info("Запрос к api отправлен")
             response = requests.get(url, params=params, data={})
             result = response.json()
+            print(result)
             if "Global Quote" in result and "05. price" in result["Global Quote"]:
                 price = float(result["Global Quote"]["05. price"])
                 my_logger.info("Запрос обработан и отформатирован")
